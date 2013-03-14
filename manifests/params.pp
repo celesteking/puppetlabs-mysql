@@ -12,7 +12,7 @@
 #
 class mysql::params {
 
-  $bind_address        = '127.0.0.1'
+  $bind_address        = 'skip'
   $port                = 3306
   $etc_root_password   = false
   $ssl                 = false
@@ -152,5 +152,10 @@ class mysql::params {
       }
     }
   }
+
+  $conf_dir       = '/etc/mysql/conf.d'
+  $conf_dir_local = '/etc/mysql/conf.local.d'
+
+  $disclaimer = sprintf("%s\n%s\n", "# ***   This file is managed by Puppet    ***", "# *** Automatically generated, don't edit ***")
 
 }

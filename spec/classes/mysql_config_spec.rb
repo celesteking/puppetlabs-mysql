@@ -1,11 +1,11 @@
 require 'spec_helper'
 describe 'mysql::config' do
-
+	
   let :constant_parameter_defaults do
     {
      :root_password     => 'UNSET',
      :old_root_password => '',
-     :bind_address      => '127.0.0.1',
+     #:bind_address      => '127.0.0.1',
      :port              => '3306',
      :etc_root_password => false,
      :datadir           => '/var/lib/mysql',
@@ -13,6 +13,9 @@ describe 'mysql::config' do
      :ssl               => false,
     }
   end
+  
+	let(:mysqld_general_cnf) { '/etc/mysql/conf.d/mysqld-general.cnf' }
+	let(:disclaimer) { sprintf("%s\n%s\n\n", "# ***   This file is managed by Puppet    ***", "# *** Automatically generated, don't edit ***")	}
 
   describe 'with osfamily specific defaults' do
     {
@@ -69,7 +72,7 @@ describe 'mysql::config' do
           )}
 
           it { should contain_file('/root/.my.cnf').with(
-            'content' => "[client]\nuser=root\nhost=localhost\npassword=foo\n",
+            'content' => "#{disclaimer}[client]\nuser=root\nhost=localhost\npassword=foo\n",
             'require' => 'Exec[set_mysql_rootpw]'
           )}
 
@@ -153,26 +156,28 @@ describe 'mysql::config' do
               'mode'   => '0644'
             )}
             it 'should have a template with the correct contents' do
-              content = param_value(subject, 'file', param_values[:config_file], 'content')
+							content = param_value(subject, 'file', mysqld_general_cnf, 'content')
+
               expected_lines = [
-                "port    = #{param_values[:port]}",
-                "socket    = #{param_values[:socket]}",
-                "pid-file  = #{param_values[:pidfile]}",
-                "datadir   = #{param_values[:datadir]}",
-                "bind-address    = #{param_values[:bind_address]}"
+                "port = #{param_values[:port]}",
+                "socket = #{param_values[:socket]}",
+                "pid-file = #{param_values[:pidfile]}",
+                "datadir = #{param_values[:datadir]}",
               ]
+							expected_lines << "bind-address = #{param_values[:bind_address]}" if param_values[:bind_address]
+
               if param_values[:default_engine] != 'UNSET'
                 expected_lines = expected_lines | [ "default-storage-engine = #{param_values[:default_engine]}" ]
               end
               if param_values[:ssl]
                 expected_lines = expected_lines |
                   [
-                    "ssl-ca    = #{param_values[:ssl_ca]}",
-                    "ssl-cert  = #{param_values[:ssl_cert]}",
-                    "ssl-key   = #{param_values[:ssl_key]}"
+                    "ssl-ca = #{param_values[:ssl_ca]}",
+                    "ssl-cert = #{param_values[:ssl_cert]}",
+                    "ssl-key = #{param_values[:ssl_key]}"
                   ]
               end
-              (content.split("\n") & expected_lines).should == expected_lines
+              (content.split("\n") & expected_lines).sort.should == expected_lines.sort
             end
           end
         end
@@ -198,7 +203,7 @@ describe 'mysql::config' do
     )}
 
     it { should contain_file('/root/.my.cnf').with(
-      'content' => "[client]\nuser=root\nhost=localhost\npassword=foo\n",
+      'content' => "#{disclaimer}[client]\nuser=root\nhost=localhost\npassword=foo\n",
       'require' => 'Exec[set_mysql_rootpw]'
     )}
 

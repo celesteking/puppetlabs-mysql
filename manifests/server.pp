@@ -5,6 +5,9 @@
 #
 # Parameters:
 #   [*package_name*] - name of package
+#   [*package_ensure*]
+#     One of 'present', 'latest', 'absent' or 'skip' (don't manage)
+#
 #   [*service_name*] - name of service
 #   [*config_hash*]  - hash of config parameters that need to be set.
 #
@@ -23,6 +26,7 @@ class mysql::server (
   $enabled          = true,
   $manage_service   = true
 ) inherits mysql::params {
+  $manage_package = ($package_ensure != 'skip')
 
   Class['mysql::server'] -> Class['mysql::config']
 
@@ -30,9 +34,11 @@ class mysql::server (
 
   create_resources( 'class', $config_class )
 
-  package { 'mysql-server':
-    ensure => $package_ensure,
-    name   => $package_name,
+  if $manage_package {
+    package { 'mysql-server':
+      ensure => $package_ensure,
+      name   => $package_name,
+    }
   }
 
   if $enabled {
@@ -41,7 +47,7 @@ class mysql::server (
     $service_ensure = 'stopped'
   }
 
-  if $manage_service {
+  if $manage_service and $manage_package {
     service { 'mysqld':
       ensure   => $service_ensure,
       name     => $service_name,

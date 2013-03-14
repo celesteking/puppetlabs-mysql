@@ -82,10 +82,19 @@
 #   port = 3300
 #
 define mysql::server::config (
-  $settings,
+  $settings = undef,
+  $delete = false,
   $notify_service = true
 ) {
   include mysql::config
+
+  if (!$delete and !$settings) {
+    fail("[mysql::server::config]: Must pass proper settings hash")
+  }
+
+  if ($name =~ /\./) {
+    fail("[mysql::server::config]: Don't put dots in title!")
+  }
 
   if is_hash($settings) {
     $content = template('mysql/my.conf.cnf.erb')
@@ -93,17 +102,17 @@ define mysql::server::config (
     $content = $settings
   }
 
-  file { "/etc/mysql/conf.d/${name}.cnf":
-    ensure  => file,
+  file { "${mysql::params::conf_dir}/${name}.cnf":
+    ensure  => $delete ? {true => absent, default => present},
     content => $content,
     owner   => 'root',
     group   => $mysql::config::root_group,
     mode    => '0644',
-    require => Package['mysql-server'],
+    require => File[$mysql::config::config_file], # Note, we don't require on package because it's possible that user doesn't want package management
   }
 
   if $notify_service {
-    File["/etc/mysql/conf.d/${name}.cnf"] {
+    File["${mysql::params::conf_dir}/${name}.cnf"] {
       # XXX notifying the Service gives us a dependency circle but I don't understand why
       notify => Exec['mysqld-restart']
     }
