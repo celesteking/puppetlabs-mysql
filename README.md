@@ -82,7 +82,7 @@ Installs mysql-server packages, configures my.cnf and starts mysqld service:
 Database login information stored in `/root/.my.cnf`.
 
 ### mysql::server::config
-Creates settings file at +/etc/mysql/conf.d/${name}.cnf+.
+Creates settings file at `/etc/mysql/conf.d/${name}.cnf`.
 
 	mysql::server::config { 'mysqld-somesetting':
 		settings => {
@@ -92,8 +92,8 @@ Creates settings file at +/etc/mysql/conf.d/${name}.cnf+.
 		}
 	}
 
-Please note, that +/etc/mysql/conf.d+ directory will be entirely puppet-managed (foreign configs erased), unless you set $mysql::config::purge_conf_dir to `false`.
-If you'd like to have puppet-unmanaged config, please place it into +/etc/mysql/conf.local.d+ dir. 
+Please note, that `/etc/mysql/conf.d` directory will be entirely puppet-managed (foreign configs erased), unless you set `$mysql::config::purge_conf_dir` to `false`.
+If you'd like to have puppet-unmanaged config, please place it into `/etc/mysql/conf.local.d` dir. 
 
 ### mysql::db
 Creates a database with a user and assign some privileges.
